@@ -5,9 +5,16 @@ import 'screens/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Supabase.initialize(
+    url: 'https://gbakhvkcjabqiavworrl.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdiYWtodmtjamFicWlhdndvcnJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU1NzAxODgsImV4cCI6MjA2MTE0NjE4OH0.myGZmOil-NqeCr00Mgs3CFMbvSoXNqIPvtBIcJAG-vw',
+  );
   runApp(const MyApp());
 }
 

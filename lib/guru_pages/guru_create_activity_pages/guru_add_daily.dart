@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../theme/AppColors.dart';
 
 class AddDailyPage extends StatefulWidget {
@@ -23,7 +24,9 @@ class _AddDailyPageState extends State<AddDailyPage> {
       if (pickedFiles != null && pickedFiles.isNotEmpty) {
         setState(() {
           // Tambahkan gambar baru ke daftar yang sudah ada
-          _selectedImages.addAll(pickedFiles.map((xfile) => File(xfile.path)).toList());
+          _selectedImages.addAll(
+            pickedFiles.map((xfile) => File(xfile.path)).toList(),
+          );
         });
       }
     } else {
@@ -42,28 +45,29 @@ class _AddDailyPageState extends State<AddDailyPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Ambil dari Kamera'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.camera);
-              },
+      builder:
+          (context) => SafeArea(
+            child: Wrap(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Ambil dari Kamera'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Pilih dari Galeri'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.gallery);
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Pilih dari Galeri'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.gallery);
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -71,6 +75,27 @@ class _AddDailyPageState extends State<AddDailyPage> {
     setState(() {
       _selectedImages.removeAt(index);
     });
+  }
+
+  Future<List<String>> _uploadAllImages() async {
+    List<String> uploadedUrls = [];
+
+    for (File image in _selectedImages) {
+      final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      final path = 'images/$fileName.jpg';
+
+      final response = await Supabase.instance.client.storage
+          .from('uploads')
+          .upload(path, image);
+
+      final publicUrl = Supabase.instance.client.storage
+          .from('uploads')
+          .getPublicUrl(path);
+
+      uploadedUrls.add(publicUrl);
+    }
+
+    return uploadedUrls;
   }
 
   @override
@@ -130,110 +155,118 @@ class _AddDailyPageState extends State<AddDailyPage> {
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
-            child: _selectedImages.isNotEmpty
-            ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ListView.separated(
-                  physics: NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: _selectedImages.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    // Mengekstrak nama file dari path
-                    String fileName = _selectedImages[index].path.split('/').last;
-                    
-                    return Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          // Preview gambar di sebelah kiri
-                          ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(8),
-                              bottomLeft: Radius.circular(8)
-                            ),
-                            child: Image.file(
-                              _selectedImages[index],
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          // Nama file di sebelah kanan
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              child: Text(
-                                fileName,
-                                style: const TextStyle(fontSize: 14),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+            child:
+                _selectedImages.isNotEmpty
+                    ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ListView.separated(
+                          physics: NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: _selectedImages.length,
+                          separatorBuilder:
+                              (context, index) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            // Mengekstrak nama file dari path
+                            String fileName =
+                                _selectedImages[index].path.split('/').last;
+
+                            return Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey.shade300),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  // Preview gambar di sebelah kiri
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(8),
+                                      bottomLeft: Radius.circular(8),
+                                    ),
+                                    child: Image.file(
+                                      _selectedImages[index],
+                                      width: 80,
+                                      height: 80,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  // Nama file di sebelah kanan
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      child: Text(
+                                        fileName,
+                                        style: const TextStyle(fontSize: 14),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ),
+                                  // Tombol hapus
+                                  IconButton(
+                                    onPressed: () => _removeImage(index),
+                                    icon: const Icon(
+                                      Icons.close,
+                                      size: 20,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        // Tombol untuk menambahkan gambar lagi
+                        Center(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _showImageSourceOptions(context),
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: AppColors.white,
+                              side: BorderSide(
+                                color: AppColors.primary30,
+                                width: 1,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
                               ),
                             ),
-                          ),
-                          // Tombol hapus
-                          IconButton(
-                            onPressed: () => _removeImage(index),
-                            icon: const Icon(
-                              Icons.close,
-                              size: 20,
-                              color: Colors.black54,
+                            icon: Icon(
+                              Icons.add_photo_alternate,
+                              color: AppColors.primary30,
+                            ),
+                            label: Text(
+                              'Tambah Gambar Lagi',
+                              style: TextStyle(color: AppColors.primary30),
                             ),
                           ),
-                        ],
+                        ),
+                      ],
+                    )
+                    : OutlinedButton(
+                      onPressed: () => _showImageSourceOptions(context),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: AppColors.white,
+                        fixedSize: const Size(270, 120),
+                        side: BorderSide(color: AppColors.primary30, width: 2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
                       ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                // Tombol untuk menambahkan gambar lagi
-                Center(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showImageSourceOptions(context),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: AppColors.white,
-                      side: BorderSide(color: AppColors.primary30, width: 1),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
+                      child: Icon(
+                        Icons.upload_outlined,
+                        color: AppColors.primary30,
+                        size: 32,
                       ),
                     ),
-                    icon: Icon(
-                      Icons.add_photo_alternate,
-                      color: AppColors.primary30,
-                    ),
-                    label: Text(
-                      'Tambah Gambar Lagi',
-                      style: TextStyle(color: AppColors.primary30),
-                    ),
-                  ),
-                ),
-              ],
-            )
-            : OutlinedButton(
-              onPressed: () => _showImageSourceOptions(context),
-              style: OutlinedButton.styleFrom(
-                backgroundColor: AppColors.white,
-                fixedSize: const Size(270, 120),
-                side: BorderSide(color: AppColors.primary30, width: 2),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-              child: Icon(
-                Icons.upload_outlined,
-                color: AppColors.primary30,
-                size: 32,
-              ),
-            ),
           ),
           const SizedBox(height: 40),
           Center(
             child: ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (namaKegiatanController.text.isEmpty ||
                     deskripsiController.text.isEmpty ||
                     _selectedImages.isEmpty) {
@@ -246,32 +279,62 @@ class _AddDailyPageState extends State<AddDailyPage> {
                   return;
                 }
 
-                print("Nama: ${namaKegiatanController.text}");
-                print("Deskripsi: ${deskripsiController.text}");
-                for (var img in _selectedImages) {
-                  print("Image path: ${img.path}");
-                }
+                try {
+                  // Upload gambar
+                  List<String> imageUrls = await _uploadAllImages();
 
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text("Berhasil"),
-                    content: const Text("Data kegiatan berhasil disimpan."),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text("OK"),
-                      ),
-                    ],
-                  ),
-                );
+                  // Simpan data ke tabel Supabase
+                  final response = await Supabase.instance.client
+                      .from('daily_reports')
+                      .insert({
+                        'nama_kegiatan': namaKegiatanController.text,
+                        'deskripsi': deskripsiController.text,
+                        'gambar':
+                            imageUrls, // pastikan kolom ini bertipe array (text[])
+                      });
+
+                  // Clear form jika sukses
+                  setState(() {
+                    namaKegiatanController.clear();
+                    deskripsiController.clear();
+                    _selectedImages.clear();
+                  });
+
+                  showDialog(
+                    context: context,
+                    builder:
+                        (context) => AlertDialog(
+                          title: const Text("Berhasil"),
+                          content: const Text(
+                            "Data kegiatan berhasil disimpan.",
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text("OK"),
+                            ),
+                          ],
+                        ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Gagal menyimpan data: $e"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               },
+
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary50,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 50,
+                  vertical: 10,
+                ),
                 elevation: 4,
                 shadowColor: Colors.black.withOpacity(0.25),
               ),
