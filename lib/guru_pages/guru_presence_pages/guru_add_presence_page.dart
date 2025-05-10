@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../theme/AppColors.dart';
 import '../../widgets/bottom_navbar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GuruPresencePage extends StatefulWidget {
   final String role;
-  const GuruPresencePage({super.key, required this.role});
+  final String classId;
+  const GuruPresencePage({
+    super.key,
+    required this.role,
+    required this.classId,
+  });
 
   @override
   State<GuruPresencePage> createState() => _GuruPresencePageState();
@@ -12,23 +18,9 @@ class GuruPresencePage extends StatefulWidget {
 
 class _GuruPresencePageState extends State<GuruPresencePage> {
   DateTime selectedDate = DateTime.now();
+  List<String> childrenNames = [];
+  List<String> presenceStatus = [];
 
-  final List<String> childrenNames = [
-    'Dokja',
-    'Rafayel',
-    'Caleb',
-    'Moran',
-    'WKWK',
-  ];
-  final List<String> presenceStatus = [
-    'Hadir',
-    'Hadir',
-    'Hadir',
-    'Hadir',
-    'Hadir',
-  ]; // Default all to "Hadir"
-
-  // Map to store counts of each presence status
   Map<String, int> statusCounts = {
     'Hadir': 0,
     'Sakit': 0,
@@ -39,16 +31,26 @@ class _GuruPresencePageState extends State<GuruPresencePage> {
   @override
   void initState() {
     super.initState();
-    // Initialize counts based on default values
-    _updateStatusCounts();
+    _fetchChildrenData();
   }
 
-  // Method to update status counts
+  void _fetchChildrenData() async {
+    final snapshot =
+        await FirebaseFirestore.instance
+            .collection('anak')
+            .where('classId', isEqualTo: widget.classId)
+            .get();
+    setState(() {
+      childrenNames =
+          snapshot.docs.map((doc) => doc['name'] as String).toList();
+      presenceStatus = List.filled(childrenNames.length, 'Hadir');
+      _updateStatusCounts();
+    });
+  }
+
   void _updateStatusCounts() {
-    // Reset all counts
     statusCounts = {'Hadir': 0, 'Sakit': 0, 'Izin': 0, 'Alpha': 0};
 
-    // Count occurrences
     for (var status in presenceStatus) {
       statusCounts[status] = (statusCounts[status] ?? 0) + 1;
     }

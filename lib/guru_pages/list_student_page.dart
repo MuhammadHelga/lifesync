@@ -1,23 +1,64 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lifesync_capstone_project/guru_pages/input_student_page.dart';
-import 'package:lifesync_capstone_project/ortu_pages/home_pages/home_page.dart';
 import '../theme/AppColors.dart';
 import '../widgets/bottom_navbar.dart';
 
 class ListStudentPage extends StatefulWidget {
   final String role;
-  const ListStudentPage({super.key, required this.role});
+  final String classId;
+
+  const ListStudentPage({super.key, required this.role, required this.classId});
 
   @override
   _ListStudentPageState createState() => _ListStudentPageState();
 }
 
 class _ListStudentPageState extends State<ListStudentPage> {
-  List<String> childrenNames = ['Dokja', 'Rafayel', 'Caleb', 'Moran', 'WKWK'];
-
   String getInitial(String name) {
     if (name.isEmpty) return '';
     return name.trim()[0].toUpperCase();
+  }
+
+  void _deleteStudent(String id, String name) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Hapus Anak'),
+            content: Text('Apakah Anda yakin ingin menghapus "$name"?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Hapus'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              ),
+            ],
+          ),
+    );
+
+    if (confirm == true) {
+      try {
+        await FirebaseFirestore.instance.collection('anak').doc(id).delete();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Anak "$name" berhasil dihapus')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal menghapus: $e')));
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    print('📌 DEBUG className yang dikirim: ${widget.classId}');
   }
 
   @override
@@ -65,58 +106,84 @@ class _ListStudentPageState extends State<ListStudentPage> {
         child: Column(
           children: [
             Expanded(
-              child: ListView.separated(
-                itemCount: childrenNames.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final name = childrenNames[index];
-                  final initial = getInitial(name);
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.primary10,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
+              child: StreamBuilder<QuerySnapshot>(
+                stream:
+                    FirebaseFirestore.instance
+                        .collection('kelas')
+                        .doc(widget.classId)
+                        .collection('anak')
+                        .orderBy('createdAt', descending: false)
+                        .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(
+                      child: Text("Belum ada anak di kelas ini."),
+                    );
+                  }
+
+                  final students = snapshot.data!.docs;
+
+                  return ListView.separated(
+                    itemCount: students.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final student = students[index];
+                      final name = student['name'] ?? 'Tanpa Nama';
+                      final initial = getInitial(name);
+                      final docId = student.id;
+
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.primary10,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            CircleAvatar(
-                              backgroundColor: AppColors.secondary50,
-                              radius: 28,
-                              child: Text(
-                                initial,
-                                style: const TextStyle(
-                                  color: AppColors.primary300,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: AppColors.secondary50,
+                                  radius: 28,
+                                  child: Text(
+                                    initial,
+                                    style: const TextStyle(
+                                      color: AppColors.primary300,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 30,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(width: 16),
+                                Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 16),
-                            Text(
-                              name,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                color: Colors.black,
-                                fontWeight: FontWeight.w500,
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: AppColors.primary300,
                               ),
+                              onPressed: () => _deleteStudent(docId, name),
                             ),
                           ],
                         ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete_outline,
-                            color: AppColors.primary300,
-                          ),
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   );
                 },
               ),
@@ -127,9 +194,9 @@ class _ListStudentPageState extends State<ListStudentPage> {
               height: 50,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).push(
+                  Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
-                      builder: (context) => BottomNavbar(role: 'Guru'),
+                      builder: (context) => BottomNavbar(role: widget.role),
                     ),
                   );
                 },
@@ -156,17 +223,21 @@ class _ListStudentPageState extends State<ListStudentPage> {
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80.0), // move button up a bit
+        padding: const EdgeInsets.only(bottom: 80.0),
         child: FloatingActionButton(
           onPressed: () {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => InputStudentPage(role: widget.role),
+                builder:
+                    (context) => InputStudentPage(
+                      role: widget.role,
+                      classId: widget.classId,
+                    ),
               ),
             );
           },
           backgroundColor: AppColors.primary50,
-          shape: const CircleBorder(), // ensure fully circular
+          shape: const CircleBorder(),
           child: const Icon(Icons.add, size: 28, color: AppColors.white),
         ),
       ),

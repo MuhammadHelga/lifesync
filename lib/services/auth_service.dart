@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../widgets/bottom_navbar.dart';
+import '../theme/AppColors.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -74,9 +75,27 @@ class AuthService {
         await FirebaseAuth.instance.signOut();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Akun ini bukan untuk role ${selectedRole.toLowerCase()}',
+            content: Container(
+              padding: EdgeInsets.all(10),
+              height: 70,
+              decoration: BoxDecoration(
+                color: AppColors.error300,
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.error_outline, color: Colors.white, size: 26),
+                  SizedBox(width: 10),
+                  Text(
+                    'Email atau Password salah',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
             ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
           ),
         );
         return null;
@@ -89,6 +108,7 @@ class AuthService {
     }
   }
 
+  // Reset Password
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
@@ -103,6 +123,7 @@ class AuthService {
     await _auth.signOut();
   }
 
+  // Update Nama dan Email
   Future<String?> updateUserEmail(String newEmail) async {
     try {
       User? user = FirebaseAuth.instance.currentUser;
@@ -120,6 +141,67 @@ class AuthService {
       return 'Gagal mengubah email: ${e.message}';
     } catch (e) {
       return 'Terjadi kesalahan: $e';
+    }
+  }
+
+  // Tambah kelas
+  Future<String> simpanKelas({
+    required String namaKelas,
+    required String ruangan,
+    required String tahunAjaran,
+  }) async {
+    String _generateKodeKelas({int length = 6}) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      final random = DateTime.now().millisecondsSinceEpoch;
+      return List.generate(
+        length,
+        (index) => chars[(random + index * 17) % chars.length],
+      ).join();
+    }
+
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception('Pengguna belum login');
+    }
+
+    final String kodeKelas = _generateKodeKelas();
+
+    try {
+      final docRef = await _firestore.collection('kelas').add({
+        'kode_kelas': kodeKelas,
+        'nama_kelas': namaKelas,
+        'ruangan': ruangan,
+        'tahun_ajaran': tahunAjaran,
+        'dibuat_oleh': user.uid,
+        'dibuat_pada': FieldValue.serverTimestamp(),
+      });
+      return docRef.id;
+    } catch (e) {
+      debugPrint('Error saat menyimpan kelas: $e');
+      throw e;
+    }
+  }
+
+  //Tambah Anak
+  Future<void> tambahAnak({
+    required String name,
+    required String gender,
+    required String classId,
+  }) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('kelas')
+          .doc(classId)
+          .collection('anak')
+          .add({
+            'name': name,
+            'gender': gender,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+    } catch (e) {
+      debugPrint('Error saat menambah anak: $e');
+      throw e; // Melempar kembali error jika terjadi
     }
   }
 }

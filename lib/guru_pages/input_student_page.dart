@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import '../theme/AppColors.dart';
 import '/guru_pages/list_student_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/auth_service.dart';
 
 class InputStudentPage extends StatefulWidget {
   final String role;
-  const InputStudentPage({super.key, required this.role});
+  final String classId;
+  const InputStudentPage({
+    super.key,
+    required this.role,
+    required this.classId,
+  });
 
   // final Function(String) onAddChild; // Callback untuk mengirim data ke halaman sebelumnya
 
@@ -18,6 +25,9 @@ class _InputStudentPageState extends State<InputStudentPage> {
   String? _selectedGender;
   String _childName = '';
   List<String> _childrenNames = [];
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _ageController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -74,11 +84,7 @@ class _InputStudentPageState extends State<InputStudentPage> {
                     ),
                     SizedBox(height: 10),
                     TextField(
-                      onChanged: (value) {
-                        setState(() {
-                          _childName = value;
-                        });
-                      },
+                      controller: _nameController,
                       decoration: InputDecoration(
                         prefixIcon: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -120,6 +126,8 @@ class _InputStudentPageState extends State<InputStudentPage> {
                     ),
                     SizedBox(height: 10),
                     TextField(
+                      keyboardType: TextInputType.number,
+                      controller: _ageController,
                       decoration: InputDecoration(
                         prefixIcon: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -218,20 +226,110 @@ class _InputStudentPageState extends State<InputStudentPage> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (_childName.isNotEmpty) {
-                        setState(() {
-                          _childrenNames.add(_childName);
-                        });
-                        // widget.onAddChild(_childName);
+                    onPressed: () async {
+                      if (_nameController.text.isNotEmpty &&
+                          _selectedGender != null) {
+                        try {
+                          await AuthService().tambahAnak(
+                            name: _nameController.text,
+                            gender: _selectedGender!,
+                            classId: widget.classId,
+                          );
+                          _nameController.clear();
+                          _ageController.clear();
+                          setState(() {
+                            _childrenNames.add(_childName);
+                            _childName = '';
+                            _selectedGender = null;
+                          });
 
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Container(
+                                padding: EdgeInsets.all(10),
+                                height: 70,
+                                decoration: BoxDecoration(
+                                  color: AppColors.success500,
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(10),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: EdgeInsets.all(5),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.check,
+                                        color: AppColors.success500,
+                                        size: 26,
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      'Anak berhasil ditambahkan ke ${widget.classId}!',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor: Colors.transparent,
+                              elevation: 0,
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Gagal menambahkan anak: $e'),
+                            ),
+                          );
+                        }
+                      } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Anak berhasil ditambahkan!')),
+                          SnackBar(
+                            // content: Text('Isi semua data terlebih dahulu'),
+                            content: Container(
+                              padding: EdgeInsets.all(10),
+                              height: 70,
+                              decoration: BoxDecoration(
+                                color: AppColors.error500,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(10),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.error,
+                                    color: AppColors.neutral100,
+                                    size: 26,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    'Isi semua data terlebih dahulu',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                            backgroundColor: Colors.transparent,
+                            elevation: 0,
+                          ),
                         );
-
-                        _childName = '';
                       }
                     },
+
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary50,
                       elevation: 5,
@@ -259,7 +357,11 @@ class _InputStudentPageState extends State<InputStudentPage> {
                       if (_childrenNames.isNotEmpty) {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => ListStudentPage(role: 'Guru'),
+                            builder:
+                                (context) => ListStudentPage(
+                                  role: 'Guru',
+                                  classId: widget.classId,
+                                ),
                           ),
                         );
                       } else {

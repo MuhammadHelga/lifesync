@@ -1,9 +1,43 @@
 import 'package:flutter/material.dart';
-import '../pages/register_page.dart';
-import '../widgets/bottom_navbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lifesync_capstone_project/widgets/bottom_navbar.dart';
 
-class ClassOptions extends StatelessWidget {
+class ClassOptions extends StatefulWidget {
   const ClassOptions({super.key});
+
+  @override
+  State<ClassOptions> createState() => _ClassOptionsState();
+}
+
+class _ClassOptionsState extends State<ClassOptions> {
+  final TextEditingController _classCodeController = TextEditingController();
+  final TextEditingController _studentNameController = TextEditingController();
+
+  // Function to save classId and studentName to SharedPreferences
+  Future<void> _saveData() async {
+    final prefs = await SharedPreferences.getInstance();
+    String classId = _classCodeController.text.trim();
+    String studentName = _studentNameController.text.trim();
+
+    if (classId.isNotEmpty && studentName.isNotEmpty) {
+      await prefs.setString('classId', classId);
+      await prefs.setString('studentName', studentName);
+
+      // Navigate to BottomNavbar after saving
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => BottomNavbar(role: 'Ortu'), // Pass role as 'Ortu'
+        ),
+      );
+    } else {
+      // Show error if fields are empty
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Harap masukkan kode kelas dan nama siswa.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,12 +65,9 @@ class ClassOptions extends StatelessWidget {
                         size: 36,
                       ),
                       onPressed: () {
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //     builder: (context) => RegisterPage(),
-                        //   ),
-                        // );
+                        Navigator.pop(
+                          context,
+                        ); // Navigasi ke halaman sebelumnya
                       },
                     ),
                   ),
@@ -69,6 +100,7 @@ class ClassOptions extends StatelessWidget {
               ),
               SizedBox(height: 10),
               TextField(
+                controller: _classCodeController,
                 decoration: InputDecoration(
                   hintText: 'Masukkan Kode Kelas',
                   hintStyle: TextStyle(fontSize: 20, color: Colors.grey),
@@ -95,6 +127,7 @@ class ClassOptions extends StatelessWidget {
               ),
               SizedBox(height: 10),
               TextField(
+                controller: _studentNameController,
                 decoration: InputDecoration(
                   hintText: 'Pilih Nama Siswa Anda',
                   hintStyle: TextStyle(fontSize: 20, color: Colors.grey),
@@ -120,12 +153,7 @@ class ClassOptions extends StatelessWidget {
                   height: 60,
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(builder: (context) => BottomNavbar()),
-                      // );
-                    },
+                    onPressed: _saveData, // Save data and navigate
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xff1D99D3),
                       shape: RoundedRectangleBorder(
