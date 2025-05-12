@@ -112,7 +112,7 @@ class _GuruHomePageState extends State<GuruHomePage> {
 
                     // School Updates
                     Text(
-                      'School Updates',
+                      'Update Kegiatan Sekolah',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 20,

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:lifesync_capstone_project/widgets/bottom_navbar.dart';
 import 'screens/splash_screen.dart';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'firebase_options.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';

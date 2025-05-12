@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:lifesync_capstone_project/guru_pages/guru_create_activity_pages/guru_create_activity.dart';
-import 'package:lifesync_capstone_project/guru_pages/guru_report_pages/guru_detail_daily.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../../theme/AppColors.dart';
+import '../guru_create_activity_pages/guru_create_activity.dart';
+import '../guru_report_pages/guru_detail_daily.dart';
 
 class GuruDailyReportPage extends StatefulWidget {
-  const GuruDailyReportPage({super.key});
+  final String classId;
+  const GuruDailyReportPage({super.key, required this.classId});
 
   @override
   State<GuruDailyReportPage> createState() => _GuruDailyReportPageState();
@@ -12,19 +16,84 @@ class GuruDailyReportPage extends StatefulWidget {
 
 class _GuruDailyReportPageState extends State<GuruDailyReportPage> {
   DateTime selectedDate = DateTime.now();
+  List<Map<String, dynamic>> activities = [];
 
-  final List<Map<String, String>> activities = [
-    {
-      'title': 'KB - A1 Belajar Menggambar',
-      'date': 'Kamis, 1 Mei 2025',
-      'image': 'assets/images/laporan_img.png',
-    },
-    {
-      'title': 'TK - B2 Bermain Musik',
-      'date': 'Kamis, 1 Mei 2025',
-      'image': 'assets/images/laporan_img.png',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    initializeDateFormatting('id_ID', null).then((_) {
+      _loadLaporanHarian();
+    });
+  }
+
+  Future<void> _loadLaporanHarian() async {
+    final String dateKey = DateFormat('yyyy-MM-dd').format(selectedDate);
+
+    try {
+      final querySnapshot =
+          await FirebaseFirestore.instance
+              .collection('laporan_harian')
+              .doc(dateKey)
+              .collection('kelas')
+              .doc(widget.classId)
+              .collection('laporan')
+              .orderBy('createdAt', descending: true)
+              .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        List<Map<String, dynamic>> loadedActivities = [];
+
+        for (var doc in querySnapshot.docs) {
+          final data = doc.data();
+          loadedActivities.add({
+            'id': doc.id,
+            'title': data['title'] ?? '',
+            'description': data['deskripsi'] ?? '',
+            'date': DateFormat(
+              'EEEE, d MMMM yyyy',
+              'id_ID',
+            ).format((data['tanggal'] as Timestamp).toDate()),
+            'image':
+                data['imageUrls'] != null && data['imageUrls'].isNotEmpty
+                    ? data['imageUrls'][0]
+                    : 'assets/images/laporan_img.png',
+            'dateKey': dateKey,
+          });
+        }
+
+        setState(() {
+          activities = loadedActivities;
+        });
+      } else {
+        setState(() {
+          activities = [];
+        });
+        print('❌ Tidak ada laporan untuk tanggal ini');
+      }
+    } catch (e) {
+      print('❌ Gagal memuat data: $e');
+      setState(() {
+        activities = [];
+      });
+    }
+  }
+
+  Future<void> _deleteLaporan(String dateKey, String laporanId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('laporan_harian')
+          .doc(dateKey)
+          .collection('kelas')
+          .doc(widget.classId)
+          .collection('laporan')
+          .doc(laporanId)
+          .delete();
+
+      print('✅ Laporan berhasil dihapus');
+    } catch (e) {
+      print('❌ Gagal menghapus laporan: $e');
+    }
+  }
 
   void _selectDate() async {
     final DateTime? picked = await showDatePicker(
@@ -50,6 +119,7 @@ class _GuruDailyReportPageState extends State<GuruDailyReportPage> {
       setState(() {
         selectedDate = picked;
       });
+      _loadLaporanHarian();
     }
   }
 
@@ -163,22 +233,92 @@ class _GuruDailyReportPageState extends State<GuruDailyReportPage> {
             ),
             const SizedBox(height: 10),
             Expanded(
-              child: ListView.builder(
-                itemCount: activities.length,
-                itemBuilder: (context, index) {
-                  final activity = activities[index];
-                  return ActivityCard(
-                    title: activity['title']!,
-                    date: activity['date']!,
-                    imagePath: activity['image']!,
-                    onDelete: () {
-                      setState(() {
-                        activities.removeAt(index);
-                      });
-                    },
-                  );
-                },
-              ),
+              child:
+                  activities.isEmpty
+                      ? Center(
+                        child: Text(
+                          'Belum ada aktivitas.',
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                        ),
+                      )
+                      : ListView.builder(
+                        itemCount: activities.length,
+                        itemBuilder: (context, index) {
+                          final activity = activities[index];
+                          return ActivityCard(
+                            title: activity['title']!,
+                            date: activity['date']!,
+                            description: activity['description'] ?? '',
+                            imagePath: activity['image']!,
+                            onDelete: () async {
+                              bool? confirmDelete = await showDialog<bool>(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    backgroundColor: AppColors.primary10,
+                                    title: const Text('Konfirmasi Hapus'),
+                                    content: const Text(
+                                      'Apakah Anda yakin ingin menghapus laporan ini?',
+                                    ),
+                                    actions: <Widget>[
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: AppColors.error300,
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(10),
+                                          ),
+                                        ),
+                                        child: TextButton(
+                                          onPressed:
+                                              () => Navigator.of(
+                                                context,
+                                              ).pop(false),
+                                          child: const Text(
+                                            'Batal',
+                                            style: TextStyle(
+                                              color: AppColors.neutral100,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: AppColors.success300,
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(10),
+                                          ),
+                                        ),
+                                        child: TextButton(
+                                          onPressed:
+                                              () => Navigator.of(
+                                                context,
+                                              ).pop(true),
+                                          child: const Text(
+                                            'Hapus',
+                                            style: TextStyle(
+                                              color: AppColors.neutral100,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+
+                              if (confirmDelete == true) {
+                                await _deleteLaporan(
+                                  activity['dateKey'],
+                                  activity['id'],
+                                );
+                                await _loadLaporanHarian();
+                              }
+                            },
+                          );
+                        },
+                      ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -189,10 +329,12 @@ class _GuruDailyReportPageState extends State<GuruDailyReportPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const GuruCreateActivityPage(
-                          initialLaporan: 'Harian',
-                          isLocked: true,
-                        ),
+                        builder:
+                            (context) => GuruCreateActivityPage(
+                              classId: widget.classId,
+                              initialLaporan: 'Harian',
+                              isLocked: true,
+                            ),
                       ),
                     );
                   },
@@ -216,24 +358,50 @@ class ActivityCard extends StatelessWidget {
   final String title;
   final String date;
   final String imagePath;
+  final String description;
   final VoidCallback onDelete;
 
   const ActivityCard({
     super.key,
     required this.title,
     required this.date,
+    required this.description,
     required this.imagePath,
     required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
+    Widget imageWidget =
+        imagePath.startsWith('http')
+            ? Image.network(
+              imagePath,
+              width: double.infinity,
+              height: 140,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(Icons.broken_image, size: 80);
+              },
+            )
+            : Image.asset(
+              imagePath,
+              width: double.infinity,
+              height: 140,
+              fit: BoxFit.cover,
+            );
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const DetailDailyReportPage()
+            builder:
+                (context) => DetailDailyReportPage(
+                  title: title,
+                  date: date,
+                  imagePath: imagePath,
+                  description: description,
+                ),
           ),
         );
       },
@@ -254,19 +422,26 @@ class ActivityCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset(
-                imagePath,
-                width: double.infinity,
-                height: 100,
-                fit: BoxFit.cover,
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 6,
+                    offset: Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: imageWidget,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
             Text(
               title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Row(
@@ -283,7 +458,10 @@ class ActivityCard extends StatelessWidget {
                     ),
                     child: Text(
                       'Hapus',
-                      style: TextStyle(color: AppColors.neutral100, fontSize: 18),
+                      style: TextStyle(
+                        color: AppColors.neutral100,
+                        fontSize: 18,
+                      ),
                     ),
                   ),
                 ),
@@ -291,7 +469,7 @@ class ActivityCard extends StatelessWidget {
             ),
           ],
         ),
-      )
+      ),
     );
   }
 }

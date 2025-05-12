@@ -9,11 +9,13 @@ import 'guru_add_announcement.dart';
 class GuruCreateActivityPage extends StatefulWidget {
   final String? initialLaporan;
   final bool isLocked;
+  final String classId;
 
   const GuruCreateActivityPage({
     super.key,
     this.initialLaporan,
     this.isLocked = false,
+    required this.classId,
   });
 
   @override
@@ -51,7 +53,7 @@ class _GuruCreateActivityPageState extends State<GuruCreateActivityPage> {
   Widget _getLaporanPage() {
     switch (_selectedLaporan) {
       case 'Harian':
-        return const AddDailyPage();
+        return AddDailyPage(classId: widget.classId);
       case 'Mingguan':
         return const AddWeeklyPage();
       case 'Semester':
@@ -114,80 +116,84 @@ class _GuruCreateActivityPageState extends State<GuruCreateActivityPage> {
             const SizedBox(height: 8),
             widget.isLocked
                 ? Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.primary30, width: 3),
-                      borderRadius: BorderRadius.circular(9999),
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color.fromRGBO(0, 0, 0, 0.3),
-                          spreadRadius: 0,
-                          blurRadius: 2,
-                          offset: Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      _selectedLaporan,
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        color: Colors.black,
-                        fontSize: 14,
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 20,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.primary30, width: 3),
+                    borderRadius: BorderRadius.circular(9999),
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color.fromRGBO(0, 0, 0, 0.3),
+                        spreadRadius: 0,
+                        blurRadius: 2,
+                        offset: Offset(0, 5),
                       ),
-                    ),
-                  )
-                : Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.primary30, width: 3),
-                      borderRadius: BorderRadius.circular(9999),
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color.fromRGBO(0, 0, 0, 0.3),
-                          spreadRadius: 0,
-                          blurRadius: 2,
-                          offset: Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        value: _selectedLaporan,
-                        icon: const Icon(Icons.arrow_drop_down),
-                        iconSize: 24,
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          color: AppColors.black,
-                          fontSize: 14,
-                        ),
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              _selectedLaporan = newValue;
-                            });
-                          }
-                        },
-                        items: _laporanOptions.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(
-                              value,
-                              style: const TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 14,
-                                color: Colors.black,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
+                    ],
+                  ),
+                  child: Text(
+                    _selectedLaporan,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Colors.black,
+                      fontSize: 14,
                     ),
                   ),
+                )
+                : Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.primary30, width: 3),
+                    borderRadius: BorderRadius.circular(9999),
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color.fromRGBO(0, 0, 0, 0.3),
+                        spreadRadius: 0,
+                        blurRadius: 2,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: _selectedLaporan,
+                      icon: const Icon(Icons.arrow_drop_down),
+                      iconSize: 24,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        color: AppColors.black,
+                        fontSize: 14,
+                      ),
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            _selectedLaporan = newValue;
+                          });
+                        }
+                      },
+                      items:
+                          _laporanOptions.map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(
+                                value,
+                                style: const TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 14,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                    ),
+                  ),
+                ),
             const SizedBox(height: 24),
             _getLaporanPage(),
           ],

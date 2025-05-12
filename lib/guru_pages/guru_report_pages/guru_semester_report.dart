@@ -4,17 +4,15 @@ import '../guru_create_activity_pages/guru_create_activity.dart';
 import 'guru_detail_Semester.dart';
 
 class GuruSemesterReportPage extends StatefulWidget {
-  const GuruSemesterReportPage({super.key});
+  final String classId;
+  const GuruSemesterReportPage({super.key, required this.classId});
 
   @override
   State<GuruSemesterReportPage> createState() => _GuruSemesterReportPageState();
 }
 
 class _GuruSemesterReportPageState extends State<GuruSemesterReportPage> {
-  final List<String> semesterList = [
-    'Semester 1',
-    'Semester 2',
-  ];
+  final List<String> semesterList = ['Semester 1', 'Semester 2'];
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +56,8 @@ class _GuruSemesterReportPageState extends State<GuruSemesterReportPage> {
           separatorBuilder: (context, index) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
             final isEven = index % 2 == 0;
-            final bgColor = isEven ? AppColors.primary10 : AppColors.secondary50;
+            final bgColor =
+                isEven ? AppColors.primary10 : AppColors.secondary50;
 
             return GestureDetector(
               onTap: () {
@@ -102,18 +101,18 @@ class _GuruSemesterReportPageState extends State<GuruSemesterReportPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const GuruCreateActivityPage(
-                initialLaporan: 'Semester',
-                isLocked: true,
-              ),
+              builder:
+                  (context) => GuruCreateActivityPage(
+                    classId: widget.classId,
+                    initialLaporan: 'Semester',
+                    isLocked: true,
+                  ),
             ),
           );
         },
         child: const Icon(Icons.add, color: Colors.white),
         backgroundColor: const Color(0xFF1D99D3),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
     );
   }

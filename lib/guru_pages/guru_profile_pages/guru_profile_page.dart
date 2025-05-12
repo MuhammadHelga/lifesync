@@ -312,7 +312,7 @@ class _GuruProfilePageState extends State<GuruProfilePage> {
                                   ),
                                 ),
                                 Text(
-                                  'LogOut',
+                                  'Keluar',
                                   style: TextStyle(
                                     color: Color(0xffDC040F),
                                     fontSize: 20,

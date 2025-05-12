@@ -4,7 +4,8 @@ import '../guru_create_activity_pages/guru_create_activity.dart';
 import 'guru_detail_weekly.dart';
 
 class GuruWeeklyReportPage extends StatefulWidget {
-  const GuruWeeklyReportPage({super.key});
+  final String classId;
+  const GuruWeeklyReportPage({super.key, required this.classId});
 
   @override
   State<GuruWeeklyReportPage> createState() => _GuruWeeklyReportPageState();
@@ -62,14 +63,15 @@ class _GuruWeeklyReportPageState extends State<GuruWeeklyReportPage> {
           separatorBuilder: (context, index) => SizedBox(height: 10),
           itemBuilder: (context, index) {
             final isEven = index % 2 == 0;
-            final bgColor = isEven ? AppColors.primary10 : AppColors.secondary50;
+            final bgColor =
+                isEven ? AppColors.primary10 : AppColors.secondary50;
 
             return GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const DetailWeeklyReportPage()
+                    builder: (context) => const DetailWeeklyReportPage(),
                   ),
                 );
               },
@@ -82,16 +84,16 @@ class _GuruWeeklyReportPageState extends State<GuruWeeklyReportPage> {
                 ),
                 child: Row(
                   children: [
-                    Expanded (
+                    Expanded(
                       child: Text(
-                      temaList[index],
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        temaList[index],
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis, 
-                    ),
                     ),
                     // const Spacer(),
                     const Icon(Icons.chevron_right, size: 38),
@@ -107,18 +109,18 @@ class _GuruWeeklyReportPageState extends State<GuruWeeklyReportPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const GuruCreateActivityPage(
-                initialLaporan: 'Mingguan',
-                isLocked: true,
-              ),
+              builder:
+                  (context) => GuruCreateActivityPage(
+                    classId: widget.classId,
+                    initialLaporan: 'Mingguan',
+                    isLocked: true,
+                  ),
             ),
           );
         },
         child: const Icon(Icons.add, color: Colors.white),
         backgroundColor: const Color(0xFF1D99D3),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
     );
   }

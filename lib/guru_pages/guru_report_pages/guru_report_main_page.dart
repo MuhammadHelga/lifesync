@@ -9,7 +9,11 @@ import 'guru_semester_report.dart';
 class GuruReportMainPage extends StatefulWidget {
   final String role;
   final String classId;
-  const GuruReportMainPage({super.key, required this.role, required this.classId,});
+  const GuruReportMainPage({
+    super.key,
+    required this.role,
+    required this.classId,
+  });
 
   @override
   State<GuruReportMainPage> createState() => _GuruReportMainPageState();
@@ -49,7 +53,11 @@ class _GuruReportMainPageState extends State<GuruReportMainPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => BottomNavbar(role: widget.role, classId: widget.classId,),
+                builder:
+                    (context) => BottomNavbar(
+                      role: widget.role,
+                      classId: widget.classId,
+                    ),
               ),
             );
           },
@@ -81,7 +89,10 @@ class _GuruReportMainPageState extends State<GuruReportMainPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => GuruDailyReportPage(),
+                              builder:
+                                  (context) => GuruDailyReportPage(
+                                    classId: widget.classId,
+                                  ),
                             ),
                           );
                         },
@@ -121,7 +132,10 @@ class _GuruReportMainPageState extends State<GuruReportMainPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => GuruWeeklyReportPage(),
+                              builder:
+                                  (context) => GuruWeeklyReportPage(
+                                    classId: widget.classId,
+                                  ),
                             ),
                           );
                         },
@@ -161,7 +175,10 @@ class _GuruReportMainPageState extends State<GuruReportMainPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => GuruSemesterReportPage(),
+                              builder:
+                                  (context) => GuruSemesterReportPage(
+                                    classId: widget.classId,
+                                  ),
                             ),
                           );
                         },
@@ -196,7 +213,10 @@ class _GuruReportMainPageState extends State<GuruReportMainPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => GuruCreateActivityPage(),
+                                builder:
+                                    (context) => GuruCreateActivityPage(
+                                      classId: widget.classId,
+                                    ),
                               ),
                             );
                           },

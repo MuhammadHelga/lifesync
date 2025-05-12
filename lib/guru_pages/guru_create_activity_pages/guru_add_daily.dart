@@ -1,11 +1,14 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
 import '../../theme/AppColors.dart';
 
 class AddDailyPage extends StatefulWidget {
-  const AddDailyPage({super.key});
+  final String classId;
+  const AddDailyPage({super.key, required this.classId});
 
   @override
   State<AddDailyPage> createState() => _AddDailyPageState();
@@ -17,6 +20,88 @@ class _AddDailyPageState extends State<AddDailyPage> {
 
   final ImagePicker _picker = ImagePicker();
   List<File> _selectedImages = [];
+  String? _classIdFromFirestore;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadClassId();
+  }
+
+  Future<void> _loadClassId() async {
+    final uid = Supabase.instance.client.auth.currentUser?.id;
+
+    if (uid == null) return;
+
+    final snapshot =
+        await FirebaseFirestore.instance
+            .collection('kelas')
+            .where('guruId', isEqualTo: uid)
+            .limit(1)
+            .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      setState(() {
+        _classIdFromFirestore = snapshot.docs.first.id;
+      });
+    }
+  }
+
+  Future<String?> uploadImageToSupabase(File imageFile, String fileName) async {
+    final supabase = Supabase.instance.client;
+    final bytes = await imageFile.readAsBytes();
+    final response = await supabase.storage
+        .from('laporan-harian')
+        .uploadBinary(
+          'images/$fileName',
+          bytes,
+          fileOptions: const FileOptions(upsert: true),
+        );
+
+    if (response.isEmpty) return null;
+
+    final publicUrl = supabase.storage
+        .from('laporan-harian')
+        .getPublicUrl('images/$fileName');
+
+    return publicUrl;
+  }
+
+  Future<void> simpanLaporanHarian({
+    required String judul,
+    required String deskripsi,
+    required String classId,
+    required DateTime tanggal,
+    required List<File> images,
+  }) async {
+    final String dateKey = DateFormat('yyyy-MM-dd').format(tanggal);
+
+    List<String> imageUrls = [];
+
+    for (var image in images) {
+      String fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${image.path.split('/').last}';
+      String? url = await uploadImageToSupabase(image, fileName);
+      if (url != null) {
+        imageUrls.add(url);
+      }
+    }
+
+    await FirebaseFirestore.instance
+        .collection('laporan_harian')
+        .doc(dateKey)
+        .collection('kelas')
+        .doc(classId)
+        .collection('laporan')
+        .add({
+          'title': judul,
+          'deskripsi': deskripsi,
+          'tanggal': tanggal,
+          'classId': _classIdFromFirestore ?? widget.classId,
+          'imageUrls': imageUrls,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     if (source == ImageSource.gallery) {
@@ -280,23 +365,17 @@ class _AddDailyPageState extends State<AddDailyPage> {
                 }
 
                 try {
-                  // Upload gambar
-                  List<String> imageUrls = await _uploadAllImages();
+                  await simpanLaporanHarian(
+                    judul: namaKegiatanController.text,
+                    deskripsi: deskripsiController.text,
+                    classId: widget.classId, // Ganti sesuai ID kelas kamu
+                    tanggal: DateTime.now(),
+                    images: _selectedImages,
+                  );
 
-                  // Simpan data ke tabel Supabase
-                  final response = await Supabase.instance.client
-                      .from('daily_reports')
-                      .insert({
-                        'nama_kegiatan': namaKegiatanController.text,
-                        'deskripsi': deskripsiController.text,
-                        'gambar':
-                            imageUrls, // pastikan kolom ini bertipe array (text[])
-                      });
-
-                  // Clear form jika sukses
+                  namaKegiatanController.clear();
+                  deskripsiController.clear();
                   setState(() {
-                    namaKegiatanController.clear();
-                    deskripsiController.clear();
                     _selectedImages.clear();
                   });
 

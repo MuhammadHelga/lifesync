@@ -72,7 +72,7 @@ class ReportingPage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => DaysReportingPage(),
+                            builder: (context) => DaysReportingPage(classId: classId,),
                           ),
                         );
                       },

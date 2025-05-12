@@ -380,7 +380,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 size: 30,
                               ),
                               Text(
-                                'LogOut',
+                                'Keluar',
                                 style: TextStyle(
                                   color: Color(0xffDC040F),
                                   fontSize: 20,

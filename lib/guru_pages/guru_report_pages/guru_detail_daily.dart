@@ -2,7 +2,18 @@ import 'package:flutter/material.dart';
 import '../../theme/AppColors.dart';
 
 class DetailDailyReportPage extends StatelessWidget {
-  const DetailDailyReportPage({super.key});
+  final String title;
+  final String date;
+  final String description;
+  final String imagePath;
+
+  const DetailDailyReportPage({
+    super.key,
+    required this.title,
+    required this.date,
+    required this.description,
+    required this.imagePath,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -42,12 +53,22 @@ class DetailDailyReportPage extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          Image.asset(
-            'assets/images/laporan_img.png',
-            height: screenHeight * 0.4,
-            width: double.infinity,
-            fit: BoxFit.cover,
-          ),
+          imagePath.startsWith('http')
+              ? Image.network(
+                imagePath,
+                height: screenHeight * 0.4,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder:
+                    (context, error, stackTrace) =>
+                        Icon(Icons.broken_image, size: 100),
+              )
+              : Image.asset(
+                imagePath,
+                height: screenHeight * 0.4,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -69,20 +90,7 @@ class DetailDailyReportPage extends StatelessWidget {
               ),
               child: SingleChildScrollView(
                 child: Text(
-                  'Ananda mulai menunjukkan pemahaman mengenai identitas dirinya. '
-                  'Ananda mulai menunjukkan pemahaman mengenai identitas dirinya. '
-                  'Ananda mulai menunjukkan pemahaman mengenai identitas dirinya. '
-                  'Ananda mulai menunjukkan pemahaman mengenai identitas dirinya. '
-                  'Ananda mulai menunjukkan pemahaman mengenai identitas dirinya. '
-                  'Ananda mulai menunjukkan pemahaman mengenai identitas dirinya. '
-                  'Ananda mulai menunjukkan pemahaman mengenai identitas dirinya. '
-                  'Ananda mulai menunjukkan pemahaman mengenai identitas dirinya. '
-                  'Ananda mulai menunjukkan pemahaman mengenai identitas dirinya. '
-                  'Ananda mulai menunjukkan pemahaman mengenai identitas dirinya. '
-                  'Ananda mulai menunjukkan pemahaman mengenai identitas dirinya. '
-                  'Ananda mulai menunjukkan pemahaman mengenai identitas dirinya. '
-                  'Ananda mulai menunjukkan pemahaman mengenai identitas dirinya. '
-                  'Ananda mulai menunjukkan pemahaman mengenai identitas dirinya. ',
+                  description,
                   style: TextStyle(fontSize: 16),
                   textAlign: TextAlign.justify,
                 ),
@@ -105,7 +113,7 @@ class DetailDailyReportPage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'KB - A1 Belajar Menggambar',
+                      title,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -114,7 +122,7 @@ class DetailDailyReportPage extends StatelessWidget {
                     ),
                     SizedBox(height: 10),
                     Text(
-                      'Jumat, 2 Mei 2025',
+                      date,
                       style: TextStyle(fontSize: 16),
                       textAlign: TextAlign.center,
                     ),
