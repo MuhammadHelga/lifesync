@@ -5,7 +5,8 @@ import '../services/auth_service.dart';
 
 class ForgotPassword extends StatefulWidget {
   final String role;
-  const ForgotPassword({super.key, required this.role});
+  final String classId;
+  const ForgotPassword({super.key, required this.role, required this.classId});
 
   @override
   State<ForgotPassword> createState() => _ForgotPasswordState();
@@ -58,8 +59,10 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                                   context,
                                   MaterialPageRoute(
                                     builder:
-                                        (context) =>
-                                            LoginPage(role: widget.role),
+                                        (context) => LoginPage(
+                                          role: widget.role,
+                                          classId: widget.classId,
+                                        ),
                                   ),
                                 );
                               },
@@ -168,7 +171,9 @@ class _ForgotPasswordState extends State<ForgotPassword> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => LoginPage(role: widget.role),
+                  builder:
+                      (context) =>
+                          LoginPage(role: widget.role, classId: widget.classId),
                 ),
               );
             } catch (e) {

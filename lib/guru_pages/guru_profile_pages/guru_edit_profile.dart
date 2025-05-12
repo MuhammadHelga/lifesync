@@ -9,7 +9,8 @@ import '../../theme/AppColors.dart';
 
 class GuruEditProfile extends StatefulWidget {
   final String role;
-  const GuruEditProfile({super.key, required this.role});
+  final String classId;
+  const GuruEditProfile({super.key, required this.role, required this.classId,});
 
   @override
   State<GuruEditProfile> createState() => _GuruEditProfileState();
@@ -104,7 +105,7 @@ class _GuruEditProfileState extends State<GuruEditProfile> {
 
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (context) => LoginPage(role: role)),
+            MaterialPageRoute(builder: (context) => LoginPage(role: role, classId: widget.classId,)),
             (route) => false,
           );
           return;
@@ -121,7 +122,7 @@ class _GuruEditProfileState extends State<GuruEditProfile> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => GuruProfilePage(role: widget.role),
+            builder: (context) => GuruProfilePage(role: widget.role, classId: widget.classId,),
           ),
         );
       }

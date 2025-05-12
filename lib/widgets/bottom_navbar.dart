@@ -10,7 +10,8 @@ import '../guru_pages/guru_profile_pages/guru_profile_page.dart';
 
 class BottomNavbar extends StatefulWidget {
   final String role;
-  const BottomNavbar({super.key, required this.role});
+  final String classId;
+  const BottomNavbar({super.key, required this.role, required this.classId});
 
   @override
   State<BottomNavbar> createState() => _BottomNavbarState();
@@ -29,15 +30,15 @@ class _BottomNavbarState extends State<BottomNavbar> {
   Widget build(BuildContext context) {
     List<Widget> ortu_pages = [
       HomePage(),
-      PresencePage(role: widget.role),
-      ReportingPage(role: widget.role),
-      ProfilePage(role: widget.role),
+      PresencePage(role: widget.role, classId: widget.classId),
+      ReportingPage(role: widget.role, classId: widget.classId),
+      ProfilePage(role: widget.role, classId: widget.classId),
     ];
     List<Widget> guru_pages = [
       GuruHomePage(),
-      GuruPresencePage(role: widget.role, classId: ' '),
-      GuruReportMainPage(role: widget.role),
-      GuruProfilePage(role: widget.role),
+      GuruPresencePage(role: widget.role, classId: widget.classId),
+      GuruReportMainPage(role: widget.role, classId: widget.classId),
+      GuruProfilePage(role: widget.role, classId: widget.classId),
     ];
 
     final pages = widget.role == 'Guru' ? guru_pages : ortu_pages;

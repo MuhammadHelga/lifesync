@@ -7,7 +7,9 @@ import 'join_class_page.dart';
 
 class ChooseClassPage extends StatefulWidget {
   final String role;
-  const ChooseClassPage({Key? key, required this.role}) : super(key: key);
+  final String classId;
+  const ChooseClassPage({Key? key, required this.role, required this.classId})
+    : super(key: key);
 
   @override
   State<ChooseClassPage> createState() => _ChooseClassPageState();
@@ -46,7 +48,9 @@ class _ChooseClassPageState extends State<ChooseClassPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => LoginPage(role: widget.role),
+                  builder:
+                      (context) =>
+                          LoginPage(role: widget.role, classId: widget.classId),
                 ),
               );
             },
@@ -97,8 +101,10 @@ class _ChooseClassPageState extends State<ChooseClassPage> {
                                 context,
                                 MaterialPageRoute(
                                   builder:
-                                      (context) =>
-                                          BottomNavbar(role: widget.role),
+                                      (context) => JoinClassPage(
+                                        role: widget.role,
+                                        classId: widget.classId,
+                                      ),
                                 ),
                               );
                             },
@@ -128,7 +134,9 @@ class _ChooseClassPageState extends State<ChooseClassPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => CreateClassPage(role: widget.role,),
+                                  builder:
+                                      (context) =>
+                                          CreateClassPage(role: widget.role),
                                 ),
                               );
                             },

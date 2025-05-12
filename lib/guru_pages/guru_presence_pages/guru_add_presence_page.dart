@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/AppColors.dart';
+import 'package:intl/intl.dart';
 import '../../widgets/bottom_navbar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -20,6 +21,7 @@ class _GuruPresencePageState extends State<GuruPresencePage> {
   DateTime selectedDate = DateTime.now();
   List<String> childrenNames = [];
   List<String> presenceStatus = [];
+  List<String> childrenIds = [];
 
   Map<String, int> statusCounts = {
     'Hadir': 0,
@@ -35,17 +37,82 @@ class _GuruPresencePageState extends State<GuruPresencePage> {
   }
 
   void _fetchChildrenData() async {
+    print("📌 Mengambil anak dari classId: ${widget.classId}");
     final snapshot =
         await FirebaseFirestore.instance
+            .collection('kelas')
+            .doc(widget.classId)
             .collection('anak')
-            .where('classId', isEqualTo: widget.classId)
             .get();
+
     setState(() {
       childrenNames =
           snapshot.docs.map((doc) => doc['name'] as String).toList();
       presenceStatus = List.filled(childrenNames.length, 'Hadir');
       _updateStatusCounts();
+      childrenIds = snapshot.docs.map((doc) => doc.id).toList();
     });
+
+    _loadPresensi();
+  }
+
+  Future<void> _loadPresensi() async {
+    final String dateKey = DateFormat('yyyy-MM-dd').format(selectedDate);
+
+    for (int i = 0; i < childrenIds.length; i++) {
+      final anakId = childrenIds[i];
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('kelas')
+              .doc(widget.classId)
+              .collection('anak')
+              .doc(anakId)
+              .collection('presensi')
+              .doc(dateKey)
+              .get();
+
+      if (doc.exists) {
+        presenceStatus[i] = doc['status'] ?? 'Hadir';
+      } else {
+        presenceStatus[i] = 'Hadir';
+      }
+    }
+
+    setState(() {
+      _updateStatusCounts();
+    });
+  }
+
+  Future<void> _simpanPresensi() async {
+    try {
+      for (int i = 0; i < childrenIds.length; i++) {
+        final anakId = childrenIds[i];
+        final status = presenceStatus[i];
+
+        await FirebaseFirestore.instance
+            .collection('kelas')
+            .doc(widget.classId)
+            .collection('anak')
+            .doc(anakId)
+            .collection('presensi')
+            .doc(
+              '${selectedDate.toIso8601String().substring(0, 10)}',
+            ) // YYYY-MM-DD
+            .set({
+              'tanggal': selectedDate,
+              'status': status,
+              'createdAt': FieldValue.serverTimestamp(),
+            });
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Presensi berhasil disimpan')));
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal menyimpan presensi: $e')));
+    }
   }
 
   void _updateStatusCounts() {
@@ -83,6 +150,7 @@ class _GuruPresencePageState extends State<GuruPresencePage> {
       setState(() {
         selectedDate = picked;
       });
+      _loadPresensi();
     }
   }
 
@@ -137,7 +205,11 @@ class _GuruPresencePageState extends State<GuruPresencePage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => BottomNavbar(role: widget.role),
+                builder:
+                    (context) => BottomNavbar(
+                      role: widget.role,
+                      classId: widget.classId,
+                    ),
               ),
             );
           },
@@ -493,6 +565,28 @@ class _GuruPresencePageState extends State<GuruPresencePage> {
                     ),
                   );
                 },
+              ),
+            ),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _simpanPresensi,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary50,
+                  elevation: 5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                child: Text(
+                  'Simpan Presensi',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ],

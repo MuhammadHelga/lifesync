@@ -1,41 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:lifesync_capstone_project/widgets/bottom_navbar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../ortu_pages/choose_student_page.dart';
 
 class ClassOptions extends StatefulWidget {
-  const ClassOptions({super.key});
+  final String role;
+  final String classId;
+  const ClassOptions({super.key, required this.role, required this.classId});
 
   @override
   State<ClassOptions> createState() => _ClassOptionsState();
 }
 
 class _ClassOptionsState extends State<ClassOptions> {
-  final TextEditingController _classCodeController = TextEditingController();
-  final TextEditingController _studentNameController = TextEditingController();
+  final TextEditingController _kodeKelasController = TextEditingController();
 
   // Function to save classId and studentName to SharedPreferences
-  Future<void> _saveData() async {
-    final prefs = await SharedPreferences.getInstance();
-    String classId = _classCodeController.text.trim();
-    String studentName = _studentNameController.text.trim();
+  void _bergabung() async {
+    String kodeKelas = _kodeKelasController.text.trim();
 
-    if (classId.isNotEmpty && studentName.isNotEmpty) {
-      await prefs.setString('classId', classId);
-      await prefs.setString('studentName', studentName);
+    if (kodeKelas.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Kode kelas tidak boleh kosong')));
+      return;
+    }
 
-      // Navigate to BottomNavbar after saving
-      Navigator.pushReplacement(
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance
+              .collection('kelas')
+              .where('kode_kelas', isEqualTo: kodeKelas)
+              .get();
+
+      if (snapshot.docs.isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Kode kelas tidak ditemukan')));
+        return;
+      }
+
+      final classDoc = snapshot.docs.first;
+      final classId = classDoc.id;
+
+      print('✅ Bergabung ke classId: $classId');
+
+      // Arahkan ke halaman yang memerlukan classId
+      Navigator.push(
         context,
         MaterialPageRoute(
           builder:
-              (context) => BottomNavbar(role: 'Ortu'), // Pass role as 'Ortu'
+              (context) =>
+                  ChooseStudentPage(classId: classId, role: 'Orang Tua'),
         ),
       );
-    } else {
-      // Show error if fields are empty
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Harap masukkan kode kelas dan nama siswa.')),
-      );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
     }
   }
 
@@ -100,7 +122,7 @@ class _ClassOptionsState extends State<ClassOptions> {
               ),
               SizedBox(height: 10),
               TextField(
-                controller: _classCodeController,
+                controller: _kodeKelasController,
                 decoration: InputDecoration(
                   hintText: 'Masukkan Kode Kelas',
                   hintStyle: TextStyle(fontSize: 20, color: Colors.grey),
@@ -121,39 +143,13 @@ class _ClassOptionsState extends State<ClassOptions> {
                 ),
               ),
               SizedBox(height: 10),
-              Text(
-                'Nama Siswa',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 10),
-              TextField(
-                controller: _studentNameController,
-                decoration: InputDecoration(
-                  hintText: 'Pilih Nama Siswa Anda',
-                  hintStyle: TextStyle(fontSize: 20, color: Colors.grey),
-                  filled: true,
-                  fillColor: Color(0xffF8FAFC),
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: 20,
-                    horizontal: 20,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(color: Color(0xff1D99D3), width: 3),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(color: Color(0xff1D99D3), width: 3),
-                  ),
-                ),
-              ),
               Padding(
                 padding: const EdgeInsets.only(top: 110),
                 child: SizedBox(
                   height: 60,
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _saveData, // Save data and navigate
+                    onPressed: _bergabung,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xff1D99D3),
                       shape: RoundedRectangleBorder(

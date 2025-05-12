@@ -3,7 +3,7 @@ import 'dart:async';
 import 'role_option_page.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  const SplashScreen({super.key,});
 
   @override
   _SplashScreenState createState() => _SplashScreenState();
@@ -16,7 +16,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Timer(Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const RoleOptionPage()),
+        MaterialPageRoute(builder: (context) => const RoleOptionPage(classId: '',)),
       );
     });
   }

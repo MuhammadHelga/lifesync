@@ -8,7 +8,8 @@ import 'guru_semester_report.dart';
 
 class GuruReportMainPage extends StatefulWidget {
   final String role;
-  const GuruReportMainPage({super.key, required this.role});
+  final String classId;
+  const GuruReportMainPage({super.key, required this.role, required this.classId,});
 
   @override
   State<GuruReportMainPage> createState() => _GuruReportMainPageState();
@@ -48,7 +49,7 @@ class _GuruReportMainPageState extends State<GuruReportMainPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => BottomNavbar(role: widget.role),
+                builder: (context) => BottomNavbar(role: widget.role, classId: widget.classId,),
               ),
             );
           },

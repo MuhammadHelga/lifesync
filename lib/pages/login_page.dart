@@ -5,10 +5,12 @@ import '../pages/forgot_password.dart';
 import '../widgets/bottom_navbar.dart';
 import '../guru_pages/choose_class_page.dart';
 import '../services/auth_service.dart';
+import '../ortu_pages/class_options.dart';
 
 class LoginPage extends StatefulWidget {
   final String role;
-  const LoginPage({super.key, required this.role});
+  final String classId;
+  const LoginPage({super.key, required this.role, required this.classId});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -63,7 +65,10 @@ class _LoginPageState extends State<LoginPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => RoleOptionPage(),
+                                    builder:
+                                        (context) => RoleOptionPage(
+                                          classId: widget.classId,
+                                        ),
                                   ),
                                 );
                               },
@@ -197,7 +202,11 @@ class _LoginPageState extends State<LoginPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ForgotPassword(role: widget.role),
+                builder:
+                    (context) => ForgotPassword(
+                      role: widget.role,
+                      classId: widget.classId,
+                    ),
               ),
             );
           },
@@ -225,14 +234,20 @@ class _LoginPageState extends State<LoginPage> {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ChooseClassPage(role: widget.role),
+                    builder:
+                        (context) =>
+                            ChooseClassPage(role: widget.role, classId: ''),
                   ),
                 );
               } else if (widget.role == 'Orang Tua') {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => BottomNavbar(role: widget.role),
+                    builder:
+                        (context) => ClassOptions(
+                          role: widget.role,
+                          classId: widget.classId,
+                        ),
                   ),
                 );
               }
@@ -258,7 +273,11 @@ class _LoginPageState extends State<LoginPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => RegisterPage(role: widget.role),
+                builder:
+                    (context) => RegisterPage(
+                      role: widget.role,
+                      classId: widget.classId,
+                    ),
               ),
             );
           },

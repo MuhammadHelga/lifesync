@@ -10,7 +10,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class GuruProfilePage extends StatefulWidget {
   final String role;
-  const GuruProfilePage({super.key, required this.role});
+  final String classId;
+  const GuruProfilePage({super.key, required this.role, required this.classId});
 
   @override
   _GuruProfilePageState createState() => _GuruProfilePageState();
@@ -18,6 +19,8 @@ class GuruProfilePage extends StatefulWidget {
 
 class _GuruProfilePageState extends State<GuruProfilePage> {
   String? _name;
+  String? kodeKelas;
+  String? ruangan;
 
   final List<Kelas> semuaKelas = [
     Kelas(
@@ -42,6 +45,7 @@ class _GuruProfilePageState extends State<GuruProfilePage> {
   void initState() {
     super.initState();
     _loadUserName();
+    _loadClassInfo();
   }
 
   Future<void> _loadUserName() async {
@@ -57,6 +61,25 @@ class _GuruProfilePageState extends State<GuruProfilePage> {
           _name = doc['name'];
         });
       }
+    }
+  }
+
+  Future<void> _loadClassInfo() async {
+    try {
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('kelas')
+              .doc(widget.classId)
+              .get();
+
+      if (doc.exists) {
+        setState(() {
+          kodeKelas = doc['kode_kelas'];
+          ruangan = doc['ruangan'];
+        });
+      }
+    } catch (e) {
+      print('Gagal mengambil data kelas: $e');
     }
   }
 
@@ -125,7 +148,11 @@ class _GuruProfilePageState extends State<GuruProfilePage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => BottomNavbar(role: widget.role),
+                builder:
+                    (context) => BottomNavbar(
+                      role: widget.role,
+                      classId: widget.classId,
+                    ),
               ),
             );
           },
@@ -179,7 +206,15 @@ class _GuruProfilePageState extends State<GuruProfilePage> {
                           ),
                         ),
                         Text(
-                          'Kelas - Kode Kelas',
+                          ruangan != null ? '$ruangan' : 'Memuat Kelas...',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Color(0xffF2F9FD),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          kodeKelas != null ? '$kodeKelas' : 'Memuat Kode...',
                           style: TextStyle(
                             fontSize: 18,
                             color: Color(0xffF2F9FD),
@@ -200,7 +235,10 @@ class _GuruProfilePageState extends State<GuruProfilePage> {
                           context,
                           MaterialPageRoute(
                             builder:
-                                (context) => GuruEditProfile(role: widget.role),
+                                (context) => GuruEditProfile(
+                                  role: widget.role,
+                                  classId: widget.classId,
+                                ),
                           ),
                         );
                         await _loadUserName();
@@ -255,7 +293,10 @@ class _GuruProfilePageState extends State<GuruProfilePage> {
                                 context,
                                 MaterialPageRoute(
                                   builder:
-                                      (context) => LoginPage(role: widget.role),
+                                      (context) => LoginPage(
+                                        role: widget.role,
+                                        classId: widget.classId,
+                                      ),
                                 ),
                                 (route) => false,
                               );

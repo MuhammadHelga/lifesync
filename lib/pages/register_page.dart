@@ -8,7 +8,9 @@ import '../services/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
   final String role;
-  const RegisterPage({super.key, required this.role});
+  final String classId;
+  const RegisterPage({super.key, required this.role,
+    required this.classId,});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -66,7 +68,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   MaterialPageRoute(
                                     builder:
                                         (context) =>
-                                            LoginPage(role: widget.role),
+                                            LoginPage(role: widget.role, classId: widget.classId,),
                                   ),
                                 );
                               },
@@ -256,7 +258,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => LoginPage(role: widget.role),
+                    builder: (context) => LoginPage(role: widget.role, classId: widget.classId,),
                   ),
                 );
               }
@@ -288,7 +290,7 @@ class _RegisterPageState extends State<RegisterPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => LoginPage(role: widget.role),
+                builder: (context) => LoginPage(role: widget.role, classId: widget.classId,),
               ),
             );
           },

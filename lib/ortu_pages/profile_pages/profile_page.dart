@@ -7,10 +7,12 @@ import '../../theme/AppColors.dart';
 import '../../services/auth_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
   final String role;
-  const ProfilePage({super.key, required this.role});
+  final String classId;
+  const ProfilePage({super.key, required this.role, required this.classId});
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -18,11 +20,16 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   String? _name;
+  String? _childName;
+  String? _childClass;
+  String childName = '';
+  String ruangKelas = '';
 
   @override
   void initState() {
     super.initState();
     _loadUserName();
+    _loadChildAndClassInfo();
   }
 
   // Ambil nama pengguna dari Firestore
@@ -39,6 +46,43 @@ class _ProfilePageState extends State<ProfilePage> {
           _name = doc['name'];
         });
       }
+    }
+  }
+
+  Future<void> _loadChildAndClassInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    final selectedChildId = prefs.getString('selectedChildId');
+
+    if (selectedChildId != null && widget.classId.isNotEmpty) {
+      // Ambil data anak
+      final anakSnapshot =
+          await FirebaseFirestore.instance
+              .collection('kelas')
+              .doc(widget.classId)
+              .collection('anak')
+              .doc(selectedChildId)
+              .get();
+
+      // Ambil data kelas
+      final kelasSnapshot =
+          await FirebaseFirestore.instance
+              .collection('kelas')
+              .doc(widget.classId)
+              .get();
+
+      if (anakSnapshot.exists && kelasSnapshot.exists) {
+        final anakData = anakSnapshot.data();
+        final kelasData = kelasSnapshot.data();
+
+        setState(() {
+          childName = anakData?['name'] ?? 'Nama tidak ditemukan';
+          ruangKelas = kelasData?['ruangan'] ?? 'Ruangan tidak ditemukan';
+        });
+      } else {
+        print('Dokumen anak atau kelas tidak ditemukan.');
+      }
+    } else {
+      print('selectedChildId atau classId kosong');
     }
   }
 
@@ -75,7 +119,11 @@ class _ProfilePageState extends State<ProfilePage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => BottomNavbar(role: widget.role),
+                builder:
+                    (context) => BottomNavbar(
+                      role: widget.role,
+                      classId: widget.classId,
+                    ),
               ),
             );
           },
@@ -151,8 +199,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                   context,
                                   MaterialPageRoute(
                                     builder:
-                                        (context) =>
-                                            EditProfile(role: widget.role),
+                                        (context) => EditProfile(
+                                          role: widget.role,
+                                          classId: widget.classId,
+                                        ),
                                   ),
                                 );
                                 await _loadUserName();
@@ -200,10 +250,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                 ),
                                 Text(
-                                  'Liana Almira',
+                                  '$childName',
                                   style: TextStyle(fontSize: 18),
                                 ),
-                                Text('KB - A1', style: TextStyle(fontSize: 18)),
+                                Text(
+                                  '$ruangKelas',
+                                  style: TextStyle(fontSize: 18),
+                                ),
                               ],
                             ),
                           ),
@@ -305,14 +358,16 @@ class _ProfilePageState extends State<ProfilePage> {
                           onTap: () async {
                             await AuthService().logout();
 
-                            if (!context.mounted)
-                              return;
+                            if (!context.mounted) return;
 
                             Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (context) => LoginPage(role: widget.role),
+                                    (context) => LoginPage(
+                                      role: widget.role,
+                                      classId: widget.classId,
+                                    ),
                               ),
                               (route) => false,
                             );

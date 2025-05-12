@@ -196,7 +196,7 @@ class _ListStudentPageState extends State<ListStudentPage> {
                 onPressed: () {
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
-                      builder: (context) => BottomNavbar(role: widget.role),
+                      builder: (context) => BottomNavbar(role: widget.role, classId: widget.classId,),
                     ),
                   );
                 },

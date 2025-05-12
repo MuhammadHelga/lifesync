@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import '/guru_pages/guru_home_pages/guru_home_page.dart';
+import '../services/auth_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../widgets/bottom_navbar.dart';
 import '/theme/AppColors.dart';
 
 class JoinClassPage extends StatefulWidget {
+  final String role;
+  final String classId;
+  const JoinClassPage({super.key, required this.role, required this.classId});
+
   @override
   _JoinClassPageState createState() => _JoinClassPageState();
 }
@@ -10,16 +17,53 @@ class JoinClassPage extends StatefulWidget {
 class _JoinClassPageState extends State<JoinClassPage> {
   final TextEditingController _kodeKelasController = TextEditingController();
 
-  void _bergabung() {
-    String kodeKelas = _kodeKelasController.text;
-    // Logika untuk bergabung bisa ditambahkan di sini
-    print('Bergabung dengan kode kelas: $kodeKelas');
+  void _bergabung() async {
+    String kodeKelas = _kodeKelasController.text.trim();
+
+    if (kodeKelas.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Kode kelas tidak boleh kosong')));
+      return;
+    }
+
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance
+              .collection('kelas')
+              .where('kode_kelas', isEqualTo: kodeKelas)
+              .get();
+
+      if (snapshot.docs.isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Kode kelas tidak ditemukan')));
+        return;
+      }
+
+      final classDoc = snapshot.docs.first;
+      final classId = classDoc.id;
+
+      print('✅ Bergabung ke classId: $classId');
+
+      // Arahkan ke halaman yang memerlukan classId
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BottomNavbar(classId: classId, role: 'Guru'),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:AppColors.primary5,
+      backgroundColor: AppColors.primary5,
       appBar: AppBar(
         backgroundColor: AppColors.primary5,
         leading: IconButton(
@@ -43,8 +87,10 @@ class _JoinClassPageState extends State<JoinClassPage> {
       body: Padding(
         padding: const EdgeInsets.all(30.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start, // Keep elements at the top
-          crossAxisAlignment: CrossAxisAlignment.start, // Align all children to the left
+          mainAxisAlignment:
+              MainAxisAlignment.start, // Keep elements at the top
+          crossAxisAlignment:
+              CrossAxisAlignment.start, // Align all children to the left
           children: [
             // Logo and title centered
             Center(
@@ -56,7 +102,11 @@ class _JoinClassPageState extends State<JoinClassPage> {
                   Text(
                     'Bergabung ke Kelas',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: Colors.black),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black,
+                    ),
                   ),
                 ],
               ),
@@ -65,16 +115,24 @@ class _JoinClassPageState extends State<JoinClassPage> {
             // Kode Kelas label aligned to the left
             Text(
               'Kode Kelas',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
             SizedBox(height: 10),
             TextField(
+              controller: _kodeKelasController,
               decoration: InputDecoration(
                 hintText: 'Masukkan Kode Kelas',
                 hintStyle: TextStyle(fontSize: 20, color: Colors.grey),
                 filled: true,
                 fillColor: Color(0xffF8FAFC),
-                contentPadding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                contentPadding: EdgeInsets.symmetric(
+                  vertical: 20,
+                  horizontal: 20,
+                ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide(color: Color(0xff1D99D3), width: 3),
@@ -106,12 +164,7 @@ class _JoinClassPageState extends State<JoinClassPage> {
               height: 60,
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => GuruHomePage()),
-                  );
-                },
+                onPressed: _bergabung,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary50,
                   elevation: 5,
@@ -123,9 +176,9 @@ class _JoinClassPageState extends State<JoinClassPage> {
                   'Bergabung',
                   style: TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 20, 
+                    fontSize: 20,
                     fontWeight: FontWeight.w500,
-                    color: Colors.white
+                    color: Colors.white,
                   ),
                 ),
               ),
