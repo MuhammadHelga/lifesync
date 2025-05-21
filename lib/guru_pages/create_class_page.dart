@@ -3,6 +3,10 @@ import 'package:lifesync_capstone_project/guru_pages/input_student_page.dart';
 import '/theme/AppColors.dart';
 
 import '../services/auth_service.dart';
+import 'package:lifesync_capstone_project/guru_pages/input_student_page.dart';
+import '/theme/AppColors.dart';
+
+import '../services/auth_service.dart';
 
 class CreateClassPage extends StatefulWidget {
   final String role;

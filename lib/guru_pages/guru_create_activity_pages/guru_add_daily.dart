@@ -162,26 +162,26 @@ class _AddDailyPageState extends State<AddDailyPage> {
     });
   }
 
-  // Future<List<String>> _uploadAllImages() async {
-  //   List<String> uploadedUrls = [];
+  Future<List<String>> _uploadAllImages() async {
+    List<String> uploadedUrls = [];
 
-  //   for (File image in _selectedImages) {
-  //     final fileName = DateTime.now().millisecondsSinceEpoch.toString();
-  //     final path = 'images/$fileName.jpg';
+    for (File image in _selectedImages) {
+      final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      final path = 'images/$fileName.jpg';
 
-  //     final response = await Supabase.instance.client.storage
-  //         .from('uploads')
-  //         .upload(path, image);
+      final response = await Supabase.instance.client.storage
+          .from('uploads')
+          .upload(path, image);
 
-  //     final publicUrl = Supabase.instance.client.storage
-  //         .from('uploads')
-  //         .getPublicUrl(path);
+      final publicUrl = Supabase.instance.client.storage
+          .from('uploads')
+          .getPublicUrl(path);
 
-  //     uploadedUrls.add(publicUrl);
-  //   }
+      uploadedUrls.add(publicUrl);
+    }
 
-  //   return uploadedUrls;
-  // }
+    return uploadedUrls;
+  }
 
   @override
   Widget build(BuildContext context) {

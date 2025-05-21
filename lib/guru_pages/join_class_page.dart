@@ -3,6 +3,10 @@ import '/guru_pages/guru_home_pages/guru_home_page.dart';
 import '../services/auth_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/bottom_navbar.dart';
+import '/guru_pages/guru_home_pages/guru_home_page.dart';
+import '../services/auth_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../widgets/bottom_navbar.dart';
 import '/theme/AppColors.dart';
 
 class JoinClassPage extends StatefulWidget {

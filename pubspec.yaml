@@ -59,6 +59,7 @@ flutter:
     - assets/images/ls_cover.png
     - assets/images/laporan_img.png
     # - assets/service_account.json
+
   fonts:
     - family: Poppins
       fonts:

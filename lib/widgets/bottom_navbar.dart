@@ -7,6 +7,14 @@ import '../ortu_pages/presence_pages/presence_page.dart';
 import '../ortu_pages/reporting_pages/reporting_page.dart';
 import '../ortu_pages/profile_pages/profile_page.dart';
 import '../guru_pages/guru_profile_pages/guru_profile_page.dart';
+import 'package:lifesync_capstone_project/guru_pages/guru_presence_pages/guru_add_presence_page.dart';
+import 'package:lifesync_capstone_project/guru_pages/guru_report_pages/guru_report_main_page.dart';
+import '../ortu_pages/home_pages/home_page.dart';
+import '../guru_pages/guru_home_pages/guru_home_page.dart';
+import '../ortu_pages/presence_pages/presence_page.dart';
+import '../ortu_pages/reporting_pages/reporting_page.dart';
+import '../ortu_pages/profile_pages/profile_page.dart';
+import '../guru_pages/guru_profile_pages/guru_profile_page.dart';
 
 class BottomNavbar extends StatefulWidget {
   final String role;
